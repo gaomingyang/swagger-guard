@@ -30,10 +30,18 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 
+	clientID := os.Getenv("GITHUB_CLIENT_ID")
+	clientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
+	redirectURI := os.Getenv("GITHUB_REDIRECT_URI")
+
+	if clientID == "" || clientSecret == "" || redirectURI == "" {
+		log.Fatal("Missing required GitHub OAuth environment variables")
+	}
+
 	oauthConfig = &oauth2.Config{
-		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("GITHUB_REDIRECT_URI"),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURI,
 		Endpoint:     github.Endpoint,
 		Scopes:       []string{"user:email"},
 	}
@@ -91,6 +99,11 @@ func generateState() string {
 func githubLogin(c *gin.Context) {
 	state := generateState()
 	url := oauthConfig.AuthCodeURL(state)
+
+	// 添加调试日志
+	log.Printf("OAuth Config: %+v\n", oauthConfig)
+	log.Printf("Generated OAuth URL: %s\n", url)
+
 	c.Redirect(http.StatusFound, url)
 }
 
