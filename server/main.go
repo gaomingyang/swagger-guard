@@ -93,7 +93,7 @@ func githubCallback(c *gin.Context) {
 	}
 
 	if userEmail == "" || !strings.HasSuffix(userEmail, "@"+allowedDomain) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access restricted to uniuni.com users"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access restricted to @" + allowedDomain + " users"})
 		return
 	}
 
