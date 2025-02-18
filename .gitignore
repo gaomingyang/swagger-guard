@@ -5,3 +5,5 @@ swagger_*.json
 swagger-guard-server
 build
 log
+swagger-ui/build
+build.zip

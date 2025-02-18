@@ -67,10 +67,15 @@ function App() {
             alert("Upload successful");
             setSwaggerUrl(backendApiUrl + "/swagger.json?v=" + Date.now());
             setSwaggerKey(Date.now());
+            // Reset the file input value
+            event.target.value = '';
         })
         .catch(error => {
+            console.error("Upload failed:", error);
             const errorMessage = error.response?.data?.message || "Upload failed: Unknown error";
             alert(errorMessage);
+            // Also reset the file input value on error
+            event.target.value = '';
         });
     };
 
