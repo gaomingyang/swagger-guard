@@ -154,6 +154,47 @@ func getUserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"email": email})
 }
 
+// After the getUserInfo function and before main(), add this new function:
+func uploadSwagger(c *gin.Context) {
+	// Get the file from the request
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		return
+	}
+
+	// Check if swagger.json exists
+	if _, err := os.Stat("./swagger.json"); err == nil {
+		// Create backup with timestamp
+		timestamp := time.Now().Format("20060102150405")
+		backupPath := "./swagger_" + timestamp + ".json"
+		err = os.Rename("./swagger.json", backupPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to backup existing file"})
+			return
+		}
+	}
+
+	// Save the new file as swagger.json
+	if err := c.SaveUploadedFile(file, "./swagger.json"); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+}
+
+// Add this new function after uploadSwagger
+func serveSwaggerJSON(c *gin.Context) {
+	// Set cache control headers to prevent caching
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+
+	// Serve the file
+	c.File("./swagger.json")
+}
+
 func main() {
 	router := gin.Default()
 
@@ -172,10 +213,15 @@ func main() {
 		c.Next()
 	})
 
+	// Replace the static file serving with our new handler
+	// router.StaticFile("/swagger.json", "./swagger.json")  // Remove this line
+	router.GET("/swagger.json", serveSwaggerJSON) // Add this line instead
+
 	router.GET("/auth/github", githubLogin)
 	router.GET("/auth/github/callback", githubCallback)
 	router.GET("/secure", authMiddleware(), secureRoute)
 	router.GET("/user", authMiddleware(), getUserInfo)
+	router.POST("/upload", authMiddleware(), uploadSwagger)
 
 	router.Run(":8000")
 }

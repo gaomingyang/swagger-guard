@@ -12,19 +12,18 @@ You can now set limit to only allow users with certain suffix email to access th
 git clone https://github.com/swagger-guard/swagger-guard.git
 ```
 
-2. Install the dependencies
+2.Create .env file in the server folder and add the following:
 ```
-cd swagger-guard
-cd server
-go mod tidy
-# then create .env file in the server folder and add the following:
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 GITHUB_REDIRECT_URI=http://localhost:3000/auth/github/callback
 GITHUB_SCOPES=user:email,read:user
+```
 
-
-
+3. Install the backend and frontend dependencies
+```
+cd server
+go mod tidy
 
 cd ../swagger-ui
 npm install
