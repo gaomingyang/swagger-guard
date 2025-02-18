@@ -148,12 +148,34 @@ func secureRoute(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Welcome!", "email": email})
 }
 
+// User Info Route
+func getUserInfo(c *gin.Context) {
+	email, _ := c.Get("email")
+	c.JSON(http.StatusOK, gin.H{"email": email})
+}
+
 func main() {
 	router := gin.Default()
+
+	// Add CORS middleware
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 
 	router.GET("/auth/github", githubLogin)
 	router.GET("/auth/github/callback", githubCallback)
 	router.GET("/secure", authMiddleware(), secureRoute)
+	router.GET("/user", authMiddleware(), getUserInfo)
 
 	router.Run(":8000")
 }

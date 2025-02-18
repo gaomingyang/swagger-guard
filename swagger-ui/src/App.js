@@ -3,6 +3,7 @@ import axios from "axios";
 
 function App() {
     const [token, setToken] = useState(localStorage.getItem("jwt_token"));
+    const [userEmail, setUserEmail] = useState(null);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -13,6 +14,23 @@ function App() {
             window.history.replaceState({}, document.title, "/");
         }
     }, []);
+
+    useEffect(() => {
+        if (token) {
+            // Fetch user info when token is available
+            axios.get("http://localhost:8000/user", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then(response => {
+                setUserEmail(response.data.email);
+            })
+            .catch(error => {
+                console.error("Failed to fetch user info:", error);
+            });
+        } else {
+            setUserEmail(null);
+        }
+    }, [token]);
 
     const handleLogin = () => {
         window.location.href = "http://127.0.0.1:8000/auth/github";
@@ -32,6 +50,19 @@ function App() {
 
     return (
         <div>
+            {token && userEmail && (
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    padding: '8px',
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                }}>
+                    {userEmail}
+                </div>
+            )}
             <h2>Swagger API Docs</h2>
             {!token ? (
                 <button onClick={handleLogin}>Login with GitHub</button>
