@@ -69,7 +69,8 @@ function App() {
             setSwaggerKey(Date.now());
         })
         .catch(error => {
-            alert("Upload failed: " + error.response.data.message);
+            const errorMessage = error.response?.data?.message || "Upload failed: Unknown error";
+            alert(errorMessage);
         });
     };
 

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -48,6 +49,11 @@ func init() {
 
 	jwtSecret = os.Getenv("JWT_SECRET")
 	allowedDomain = os.Getenv("ALLOWED_DOMAIN")
+
+	// Create uploads directory if it doesn't exist
+	if err := os.MkdirAll("./uploads", 0755); err != nil {
+		log.Fatal("Error creating uploads directory:", err)
+	}
 }
 
 func main() {
@@ -207,25 +213,33 @@ func uploadSwagger(c *gin.Context) {
 	// Get the file from the request
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No file uploaded"})
 		return
 	}
 
+	// Ensure uploads directory exists
+	uploadsDir := "./uploads"
+	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create uploads directory"})
+		return
+	}
+
+	swaggerPath := filepath.Join(uploadsDir, "swagger.json")
+
 	// Check if swagger.json exists
-	if _, err := os.Stat("./uploads/swagger.json"); err == nil {
+	if _, err := os.Stat(swaggerPath); err == nil {
 		// Create backup with timestamp
 		timestamp := time.Now().Format("20060102150405")
-		backupPath := "./uploads/swagger_" + timestamp + ".json"
-		err = os.Rename("./uploads/swagger.json", backupPath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to backup existing file"})
+		backupPath := filepath.Join(uploadsDir, "swagger_"+timestamp+".json")
+		if err = os.Rename(swaggerPath, backupPath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to backup existing file: " + err.Error()})
 			return
 		}
 	}
 
 	// Save the new file as swagger.json
-	if err := c.SaveUploadedFile(file, "./uploads/swagger.json"); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+	if err := c.SaveUploadedFile(file, swaggerPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save file: " + err.Error()})
 		return
 	}
 
