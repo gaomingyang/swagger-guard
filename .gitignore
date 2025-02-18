@@ -7,3 +7,4 @@ build
 log
 swagger-ui/build
 build.zip
+*.txt
