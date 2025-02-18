@@ -23,7 +23,7 @@ function App() {
     useEffect(() => {
         if (token) {
             // Fetch user info when token is available
-            axios.get("http://localhost:8000/user", {
+            axios.get(backendApiUrl + "/user", {
                 headers: { Authorization: `Bearer ${token}` }
             })
             .then(response => {
