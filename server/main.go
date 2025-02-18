@@ -42,6 +42,41 @@ func init() {
 	allowedDomain = os.Getenv("ALLOWED_DOMAIN")
 }
 
+func main() {
+	router := gin.Default()
+
+	// Add CORS middleware
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
+
+	// Public routes
+	router.GET("/swagger.json", serveSwaggerJSON)
+	router.GET("/auth/github", githubLogin)
+	router.GET("/auth/github/callback", githubCallback)
+
+	// Protected routes group
+	authorized := router.Group("/")
+	authorized.Use(authMiddleware())
+	{
+		authorized.GET("/secure", secureRoute)
+		authorized.GET("/user", getUserInfo)
+		authorized.POST("/upload", uploadSwagger)
+	}
+
+	router.Run(":8000")
+}
+
 // Generate a random state for OAuth
 func generateState() string {
 	b := make([]byte, 16)
@@ -164,11 +199,11 @@ func uploadSwagger(c *gin.Context) {
 	}
 
 	// Check if swagger.json exists
-	if _, err := os.Stat("./swagger.json"); err == nil {
+	if _, err := os.Stat("./uploads/swagger.json"); err == nil {
 		// Create backup with timestamp
 		timestamp := time.Now().Format("20060102150405")
-		backupPath := "./swagger_" + timestamp + ".json"
-		err = os.Rename("./swagger.json", backupPath)
+		backupPath := "./uploads/swagger_" + timestamp + ".json"
+		err = os.Rename("./uploads/swagger.json", backupPath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to backup existing file"})
 			return
@@ -192,36 +227,5 @@ func serveSwaggerJSON(c *gin.Context) {
 	c.Header("Expires", "0")
 
 	// Serve the file
-	c.File("./swagger.json")
-}
-
-func main() {
-	router := gin.Default()
-
-	// Add CORS middleware
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
-
-	// Replace the static file serving with our new handler
-	// router.StaticFile("/swagger.json", "./swagger.json")  // Remove this line
-	router.GET("/swagger.json", serveSwaggerJSON) // Add this line instead
-
-	router.GET("/auth/github", githubLogin)
-	router.GET("/auth/github/callback", githubCallback)
-	router.GET("/secure", authMiddleware(), secureRoute)
-	router.GET("/user", authMiddleware(), getUserInfo)
-	router.POST("/upload", authMiddleware(), uploadSwagger)
-
-	router.Run(":8000")
+	c.File("./uploads/swagger.json")
 }
