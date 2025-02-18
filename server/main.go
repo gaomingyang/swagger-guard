@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,14 +120,14 @@ func githubCallback(c *gin.Context) {
 
 	token, err := oauthConfig.Exchange(context.Background(), code)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "OAuth exchange failed"})
+		c.Redirect(http.StatusFound, os.Getenv("FRONTEND_URL")+"/login-error?message="+url.QueryEscape("OAuth exchange failed"))
 		return
 	}
 
 	client := oauthConfig.Client(context.Background(), token)
 	resp, err := client.Get("https://api.github.com/user/emails")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get email"})
+		c.Redirect(http.StatusFound, os.Getenv("FRONTEND_URL")+"/login-error?message="+url.QueryEscape("Failed to get email"))
 		return
 	}
 	defer resp.Body.Close()
@@ -147,7 +148,8 @@ func githubCallback(c *gin.Context) {
 	}
 
 	if userEmail == "" || !strings.HasSuffix(userEmail, "@"+allowedDomain) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access restricted to @" + allowedDomain + " users"})
+		errorMsg := "Access restricted to @" + allowedDomain + " users"
+		c.Redirect(http.StatusFound, os.Getenv("FRONTEND_URL")+"/login-error?message="+url.QueryEscape(errorMsg))
 		return
 	}
 

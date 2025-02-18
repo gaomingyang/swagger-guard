@@ -6,6 +6,7 @@ import "swagger-ui-react/swagger-ui.css";
 function App() {
     const [token, setToken] = useState(localStorage.getItem("jwt_token"));
     const [userEmail, setUserEmail] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
     const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL;
     const [swaggerUrl, setSwaggerUrl] = useState(backendApiUrl + "/swagger.json");
     const [swaggerKey, setSwaggerKey] = useState(Date.now());
@@ -16,6 +17,10 @@ function App() {
             const receivedToken = urlParams.get("token");
             localStorage.setItem("jwt_token", receivedToken);
             setToken(receivedToken);
+            setErrorMessage(null);
+            window.history.replaceState({}, document.title, "/");
+        } else if (urlParams.has("message")) {
+            setErrorMessage(urlParams.get("message"));
             window.history.replaceState({}, document.title, "/");
         }
     }, []);
@@ -121,6 +126,19 @@ function App() {
                     </div>
                 )}
             </div>
+
+            {errorMessage && (
+                <div style={{
+                    padding: '12px',
+                    marginBottom: '20px',
+                    backgroundColor: '#f8d7da',
+                    color: '#721c24',
+                    borderRadius: '4px',
+                    border: '1px solid #f5c6cb'
+                }}>
+                    {errorMessage}
+                </div>
+            )}
 
             {!token ? (
                 <div style={{
