@@ -33,7 +33,7 @@ func init() {
 	oauthConfig = &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-		RedirectURL:  "http://127.0.0.1:8000/auth/github/callback",
+		RedirectURL:  os.Getenv("GITHUB_REDIRECT_URI"),
 		Endpoint:     github.Endpoint,
 		Scopes:       []string{"user:email"},
 	}
@@ -136,7 +136,7 @@ func githubCallback(c *gin.Context) {
 	jwtToken := generateJWT(userEmail)
 
 	// Redirect to frontend with token
-	c.Redirect(http.StatusFound, "http://127.0.0.1:3000/login-success?token="+jwtToken)
+	c.Redirect(http.StatusFound, os.Getenv("FRONTEND_URL")+"/login-success?token="+jwtToken)
 }
 
 // Generate JWT Token

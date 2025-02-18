@@ -6,7 +6,8 @@ import "swagger-ui-react/swagger-ui.css";
 function App() {
     const [token, setToken] = useState(localStorage.getItem("jwt_token"));
     const [userEmail, setUserEmail] = useState(null);
-    const [swaggerUrl, setSwaggerUrl] = useState("http://localhost:8000/swagger.json");
+    const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL;
+    const [swaggerUrl, setSwaggerUrl] = useState(backendApiUrl + "/swagger.json");
     const [swaggerKey, setSwaggerKey] = useState(Date.now());
 
     useEffect(() => {
@@ -37,7 +38,7 @@ function App() {
     }, [token]);
 
     const handleLogin = () => {
-        window.location.href = "http://127.0.0.1:8000/auth/github";
+        window.location.href = backendApiUrl + "/auth/github";
     };
 
     const handleLogout = () => {
@@ -46,7 +47,7 @@ function App() {
     };
 
     const accessProtectedRoute = () => {
-        axios.get("http://localhost:8000/secure", {
+        axios.get(backendApiUrl + "/secure", {
             headers: { Authorization: `Bearer ${token}` }
         }).then(response => alert(response.data.message))
           .catch(error => alert("Access Denied"));
@@ -59,12 +60,12 @@ function App() {
         const formData = new FormData();
         formData.append("file", file);
 
-        axios.post("http://localhost:8000/upload", formData, {
+        axios.post(backendApiUrl + "/upload", formData, {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(response => {
             alert("Upload successful");
-            setSwaggerUrl(`http://localhost:8000/swagger.json?v=${Date.now()}`);
+            setSwaggerUrl(backendApiUrl + "/swagger.json?v=" + Date.now());
             setSwaggerKey(Date.now());
         })
         .catch(error => {
