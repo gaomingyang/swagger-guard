@@ -217,7 +217,7 @@ function App() {
                                     backgroundColor: 'white'
                                 }}
                             />
-                            <button
+                            {/* <button
                                 onClick={accessProtectedRoute}
                                 style={{
                                     padding: '8px 16px',
@@ -229,7 +229,7 @@ function App() {
                                 }}
                             >
                                 Test Secure Route
-                            </button>
+                            </button> */}
                         </div>
                     </div>
 
