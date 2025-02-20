@@ -76,7 +76,7 @@ func main() {
 	})
 
 	// Public routes
-	router.GET("/swagger.json", serveSwaggerJSON)
+	router.GET("/swagger.yaml", serveSwaggerFile)
 	router.GET("/auth/github", githubLogin)
 	router.GET("/auth/github/callback", githubCallback)
 	router.GET("/ping", func(c *gin.Context) {
@@ -229,20 +229,20 @@ func uploadSwagger(c *gin.Context) {
 		return
 	}
 
-	swaggerPath := filepath.Join(uploadsDir, "swagger.json")
+	swaggerPath := filepath.Join(uploadsDir, "swagger.yaml")
 
-	// Check if swagger.json exists
+	// Check if swagger.yaml exists
 	if _, err := os.Stat(swaggerPath); err == nil {
 		// Create backup with timestamp
 		timestamp := time.Now().Format("20060102150405")
-		backupPath := filepath.Join(uploadsDir, "swagger_"+timestamp+".json")
+		backupPath := filepath.Join(uploadsDir, "swagger_"+timestamp+".yaml")
 		if err = os.Rename(swaggerPath, backupPath); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to backup existing file: " + err.Error()})
 			return
 		}
 	}
 
-	// Save the new file as swagger.json
+	// Save the new file as swagger.yaml
 	if err := c.SaveUploadedFile(file, swaggerPath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save file: " + err.Error()})
 		return
@@ -252,12 +252,12 @@ func uploadSwagger(c *gin.Context) {
 }
 
 // Add this new function after uploadSwagger
-func serveSwaggerJSON(c *gin.Context) {
+func serveSwaggerFile(c *gin.Context) {
 	// Set cache control headers to prevent caching
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Header("Pragma", "no-cache")
 	c.Header("Expires", "0")
 
 	// Serve the file
-	c.File("./uploads/swagger.json")
+	c.File("./uploads/swagger.yaml")
 }

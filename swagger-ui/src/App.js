@@ -2,15 +2,21 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import { Button } from 'antd';
+import SwaggerGenerator from './pages/SwaggerGenerator';
 
-function App() {
+// 创建一个新的组件来包含主要内容
+function MainContent() {
     const [token, setToken] = useState(localStorage.getItem("jwt_token"));
     const [userEmail, setUserEmail] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL;
-    const [swaggerUrl, setSwaggerUrl] = useState(backendApiUrl + "/swagger.json");
+    const [swaggerUrl, setSwaggerUrl] = useState(backendApiUrl + "/swagger.yaml");
     const [swaggerKey, setSwaggerKey] = useState(Date.now());
     const [isValidToken, setIsValidToken] = useState(true);
+    
+    const navigate = useNavigate();
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -95,7 +101,7 @@ function App() {
         })
         .then(response => {
             alert("Upload successful");
-            setSwaggerUrl(backendApiUrl + "/swagger.json?v=" + Date.now());
+            setSwaggerUrl(backendApiUrl + "/swagger.yaml?v=" + Date.now());
             setSwaggerKey(Date.now());
             // Reset the file input value
             event.target.value = '';
@@ -217,7 +223,7 @@ function App() {
                                     backgroundColor: 'white'
                                 }}
                             />
-                            {/* <button
+                            <button
                                 onClick={accessProtectedRoute}
                                 style={{
                                     padding: '8px 16px',
@@ -229,7 +235,20 @@ function App() {
                                 }}
                             >
                                 Test Secure Route
-                            </button> */}
+                            </button>
+                            <button
+                                onClick={() => navigate('/generator')}
+                                style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#28a745',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Swagger生成器
+                            </button>
                         </div>
                     </div>
 
@@ -247,6 +266,18 @@ function App() {
                 </div>
             )}
         </div>
+    );
+}
+
+// 主App组件现在只负责路由设置
+function App() {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<MainContent />} />
+                <Route path="/generator" element={<SwaggerGenerator />} />
+            </Routes>
+        </Router>
     );
 }
 
