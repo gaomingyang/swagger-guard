@@ -10,6 +10,7 @@ function App() {
     const backendApiUrl = process.env.REACT_APP_BACKEND_API_URL;
     const [swaggerUrl, setSwaggerUrl] = useState(backendApiUrl + "/swagger.json");
     const [swaggerKey, setSwaggerKey] = useState(Date.now());
+    const [isValidToken, setIsValidToken] = useState(true);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -41,6 +42,30 @@ function App() {
             setUserEmail(null);
         }
     }, [token]);
+
+    useEffect(() => {
+        checkToken();
+    }, []);
+
+    const checkToken = () => {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            setIsValidToken(false);
+            return;
+        }
+        
+        // 这里可以添加验证token是否过期的逻辑
+        try {
+            const tokenData = JSON.parse(atob(token.split('.')[1]));
+            if (tokenData.exp && tokenData.exp * 1000 < Date.now()) {
+                setIsValidToken(false);
+                localStorage.removeItem('jwt_token');
+            }
+        } catch (error) {
+            setIsValidToken(false);
+            localStorage.removeItem('jwt_token');
+        }
+    };
 
     const handleLogin = () => {
         window.location.href = backendApiUrl + "/auth/github";
@@ -140,7 +165,7 @@ function App() {
                 </div>
             )}
 
-            {!token ? (
+            {!token || !isValidToken ? (
                 <div style={{
                     textAlign: 'center',
                     padding: '40px',

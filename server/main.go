@@ -79,6 +79,9 @@ func main() {
 	router.GET("/swagger.json", serveSwaggerJSON)
 	router.GET("/auth/github", githubLogin)
 	router.GET("/auth/github/callback", githubCallback)
+	router.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+	})
 
 	// Protected routes group
 	authorized := router.Group("/")
